@@ -1,0 +1,7 @@
+floppy_boot.img
+debug/
+bin/
+
+# Ignore hidden files in the source directory. This is useful for
+# intentionally leaving unfinished files untracked.
+src/.*
