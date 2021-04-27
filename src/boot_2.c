@@ -1,5 +1,6 @@
-extern void boot_print_low(const char*);
+#include "console.h"
 
 void START() {
-    boot_print_low("Hello World!");
+    boot_console_init();
+    boot_print("BOOT STAGE 2...\n");
 }

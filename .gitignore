@@ -1,4 +1,5 @@
 floppy_boot.img
+.depend/
 debug/
 bin/
 

@@ -18,7 +18,7 @@ load_mem_entries:
     xor ebx, ebx
 .next:
     cmp si, [bp + 6]
-    jge .done
+    jae .done
     mov eax, 0x0000E820
     mov edx, 0x534D4150
     mov ecx, 24

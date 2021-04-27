@@ -36,7 +36,8 @@ SECTIONS
     BOOT_SEGMENTS = ALIGN( SIZEOF( .boot_stage_3 ) + BOOT_3_START - BOOT_1_START , 0x200 ) / 0x200;
     ASSERT( BOOT_SEGMENTS < 0x80 , "Error: Combined Boot Stages 1 and 2 are too large" )
 
-    .bss (NOLOAD) : {
+    .bss (NOLOAD) : ALIGN(0x1000) {
+        * ( .bss.paged )
         * ( .bss* )
     }
 

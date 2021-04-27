@@ -9,13 +9,20 @@ LINK_DEBUG=debug/kernel-elf.o
 ASM_FILES=$(filter %.asm, $(SOURCE_FILES))
   C_FILES=$(filter %.c,   $(SOURCE_FILES))
 CPP_FILES=$(filter %.cpp, $(SOURCE_FILES))
+  HEADERS=$(filter %.h,   $(SOURCE_FILES))
 
+GCC_SOURCE=$(C_FILES) $(CPP_FILES)
 SOURCE_CODE=$(ASM_FILES) $(C_FILES) $(CPP_FILES)
 OBJECT_FILES=$(patsubst src/%, bin/%.o, $(SOURCE_CODE))
-OUTPUT_LIST=$(TARGET) bin/
+DEPEND_FILES=$(patsubst src/%, .depend/%.d, $(GCC_SOURCE))
+DEBUG_ASM_FILES=$(patsubst src/%, debug/asm/%.asm, $(GCC_SOURCE))
+OUTPUT_LIST=$(TARGET) bin/ .depend/ debug/asm/ $(LINK_DEBUG)
 GENERATED=$(OUTPUT_LIST) debug/
 
-GCC_COMPILE_FLAGS=-fleading-underscore -fno-asynchronous-unwind-tables
+GCC_COMPILE_FLAGS=-fleading-underscore -fno-asynchronous-unwind-tables -nostdlib -fno-builtin -fno-pie
+
+ASM_DEBUG_FLAGS=-S -masm=intel
+ELF_DEBUG_FLAGS=--oformat=elf64-x86-64
 
 COMPILE_ASM=nasm -f elf64
 COMPILE_C=  gcc -c $(GCC_COMPILE_FLAGS)
@@ -23,7 +30,7 @@ COMPILE_CPP=g++ -c $(GCC_COMPILE_FLAGS)
 
 ECHO_TAG=\033[$(1);1m[MAKE]\033[m
 
-.PHONY: all clean purge run debug
+.PHONY: all clean purge debug run runb runq
 .SUFFIXES:
 
 all: $(TARGET)
@@ -41,12 +48,18 @@ purge:
         rm -rf $(GENERATED);                                            \
     fi
 
-run: bochsrc.bxrc all
+run: runb
+
+runb: bochsrc.bxrc all
 	@mkdir -p debug/
-	@printf "$(call ECHO_TAG, 32) Starting simulation.\n"
+	@printf "$(call ECHO_TAG, 32) Starting bochs simulation.\n"
 	@bochs -f $<
 
-debug: $(LINK_DEBUG)
+runq: all
+	@printf "$(call ECHO_TAG, 32) Starting qemu simulation.\n"
+	@qemu-system-x86_64 -drive format=raw,file=$(TARGET)
+
+debug: all $(DEBUG_ASM_FILES) $(LINK_DEBUG)
 
 $(TARGET): $(BINARY)
 	@printf "$(call ECHO_TAG, 34) Copying $< into $@\n"
@@ -62,20 +75,37 @@ $(BINARY): $(LINKFILE) $(OBJECT_FILES)
 
 $(LINK_DEBUG): $(LINKFILE) $(OBJECT_FILES)
 	@mkdir -p $(dir $@)
-	@printf "$(call ECHO_TAG, 34) Linking [ELF DEBUG]...\n"
-	@ld -T $< --oformat=elf64-x86-64 -o $@ $(OBJECT_FILES)
+	@printf "$(call ECHO_TAG, 36) Linking [ELF DEBUG]...\n"
+	@ld -T $< $(ELF_DEBUG_FLAGS) -o $@ $(OBJECT_FILES)
 
 bin/%.asm.o: src/%.asm
 	@mkdir -p $(dir $@)
-	@printf "$(call ECHO_TAG, 34) Compiling (asm) $<\n"
+	@printf "$(call ECHO_TAG, 34) Compiling (asm) $< --> $@\n"
 	@$(COMPILE_ASM) -o $@ $<
 
 bin/%.c.o: src/%.c
 	@mkdir -p $(dir $@)
-	@printf "$(call ECHO_TAG, 34) Compiling ( c ) $<\n"
+	@printf "$(call ECHO_TAG, 34) Compiling ( c ) $< --> $@\n"
 	@$(COMPILE_C)   -o $@ $<
 
 bin/%.cpp.o: src/%.cpp
 	@mkdir -p $(dir $@)
-	@printf "$(call ECHO_TAG, 34) Compiling (c++) $<\n"
+	@printf "$(call ECHO_TAG, 34) Compiling (c++) $< --> $@\n"
 	@$(COMPILE_CPP) -o $@ $<
+
+debug/asm/%.c.asm: src/%.c
+	@mkdir -p $(dir $@)
+	@printf "$(call ECHO_TAG, 36) Compiling ( c ) [ASM DEBUG] $< --> $@\n"
+	@$(COMPILE_C)   $(ASM_DEBUG_FLAGS) -o $@ $<
+
+debug/asm/%.cpp.asm: src/%.cpp
+	@mkdir -p $(dir $@)
+	@printf "$(call ECHO_TAG, 36) Compiling (c++) [ASM DEBUG] $< --> $@\n"
+	@$(COMPILE_CPP) $(ASM_DEBUG_FLAGS) -o $@ $<
+
+.depend/%.d: src/% $(HEADERS)
+	@mkdir -p $(dir $@)
+	@gcc -MM -MT bin/%.o $< > $@
+	@gcc -MM -MT debug/asm/%.asm $< >> $@
+
+include $(DEPEND_FILES)
