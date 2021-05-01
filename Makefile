@@ -1,7 +1,7 @@
 SOURCE_FILES=$(wildcard src/*)
 
 SIZE=1440k
-LINKFILE=linker.ld
+LINKFILE=config/linker.ld
 TARGET=floppy_boot.img
 BINARY=bin/kernel.img
 LINK_DEBUG=debug/kernel-elf.o
@@ -19,14 +19,16 @@ DEBUG_ASM_FILES=$(patsubst src/%, debug/asm/%.asm, $(GCC_SOURCE))
 OUTPUT_LIST=$(TARGET) bin/ .depend/ debug/asm/ $(LINK_DEBUG)
 GENERATED=$(OUTPUT_LIST) debug/
 
-GCC_COMPILE_FLAGS=-fleading-underscore -fno-asynchronous-unwind-tables -nostdlib -fno-builtin -fno-pie
+GCC_NO_EXTENSIONS=-mno-mmx -mno-sse -mno-sse2 -mno-red-zone
+GCC_COMPILE_FLAGS=-fleading-underscore -fno-asynchronous-unwind-tables -ffreestanding -nostdlib -fno-builtin -fno-pie
 
+GCC_CORE_FLAGS=$(GCC_COMPILE_FLAGS) $(GCC_NO_EXTENSIONS)
 ASM_DEBUG_FLAGS=-S -masm=intel
 ELF_DEBUG_FLAGS=--oformat=elf64-x86-64
 
 COMPILE_ASM=nasm -f elf64
-COMPILE_C=  gcc -c $(GCC_COMPILE_FLAGS)
-COMPILE_CPP=g++ -c $(GCC_COMPILE_FLAGS)
+COMPILE_C=  gcc -c $(GCC_CORE_FLAGS)
+COMPILE_CPP=g++ -c $(GCC_CORE_FLAGS)
 
 ECHO_TAG=\033[$(1);1m[MAKE]\033[m
 
@@ -50,10 +52,10 @@ purge:
 
 run: runb
 
-runb: bochsrc.bxrc all
+runb: config/bochs_cfg.bxrc config/bochs_dbg.bxrc all
 	@mkdir -p debug/
 	@printf "$(call ECHO_TAG, 32) Starting bochs simulation.\n"
-	@bochs -f $<
+	@bochs -qf $(word 1, $^) -rc $(word 2, $^)
 
 runq: all
 	@printf "$(call ECHO_TAG, 32) Starting qemu simulation.\n"
