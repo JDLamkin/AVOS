@@ -1,6 +1,8 @@
 #ifndef OS_CONSOLE_H
 #define OS_CONSOLE_H
 
+#include "utypes.h"
+
 namespace BootConsole {
 
 static const char* STANDARD_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -36,11 +38,10 @@ void print(char);
 
 // High-level console functions
 void print(const char*);
-void printl(const char*);
 void printl();
-void print(         long, unsigned long radix = 10, const char* digits = STANDARD_DIGITS);
-void print(unsigned long, unsigned long radix = 10, const char* digits = STANDARD_DIGITS);
-void print(       double, unsigned long radix = 10, const char* digits = STANDARD_DIGITS);
+void print(  int64, uint64 radix = 10, const char* digits = STANDARD_DIGITS);
+void print( uint64, uint64 radix = 10, const char* digits = STANDARD_DIGITS);
+void print(float64, uint64 radix = 10, const char* digits = STANDARD_DIGITS);
 
 /*  Printf specification:
  *  The format string is printed as-is except for escape sequences beginning with '%'. Those escape
@@ -60,11 +61,11 @@ void print(       double, unsigned long radix = 10, const char* digits = STANDAR
 template<typename... TArgs>
 void printf(const char* format, TArgs... args);
 
-void print_format_arg(const char*&, long);
-void print_format_arg(const char*&, unsigned long);
 void print_format_arg(const char*&, int);
 void print_format_arg(const char*&, unsigned int);
-void print_format_arg(const char*&, double);
+void print_format_arg(const char*&,  int64);
+void print_format_arg(const char*&, uint64);
+void print_format_arg(const char*&, float64);
 void print_format_arg(const char*&, char);
 void print_format_arg(const char*&, const char*);
 template<> void printf(const char* format);
@@ -73,6 +74,12 @@ template<typename T, typename... TArgs>
 void printf(const char* format, T arg, TArgs... args) {
     print_format_arg(format, arg);
     printf(format, args...);
+}
+
+template<typename T>
+void printl(T val) {
+    print(val);
+    printl();
 }
 
 }

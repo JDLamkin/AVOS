@@ -1,4 +1,5 @@
 #include "console.h"
+#include "utypes.h"
 
 namespace BootConsole {
 
@@ -14,19 +15,14 @@ void printl() {
     print('\n');
 }
 
-void printl(const char* str) {
-    print(str);
-    printl();
-}
-
-void print(long val, unsigned long radix, const char* digits) {
+void print(int64 val, uint64 radix, const char* digits) {
     if(val < 0) {
         val = -val;
         print('-');
     }
-    print((unsigned long) val, radix, digits);
+    print((uint64) val, radix, digits);
 }
-void print(unsigned long val, unsigned long radix, const char* digits) {
+void print(uint64 val, uint64 radix, const char* digits) {
     // ASSERT(radix >= 2)
     static const unsigned int b_size = 65;
     char buffer[b_size];
@@ -42,8 +38,41 @@ void print(unsigned long val, unsigned long radix, const char* digits) {
     }
     print(str);
 }
-void print(double val, unsigned long radix, const char* digits) {
-    
+static unsigned int dcount(double& val, double rad) {
+    if(val < rad) return 0;
+    unsigned int d = 2*dcount(val, rad*rad);
+    if(val >= rad) {
+        val /= rad;
+        ++d;
+    }
+    return d;
+}
+void pndig(double& val, uint64 radix, const char* digits) {
+    uint64 v = (uint64)val;
+    if(v >= radix) v = radix - 1;
+    print(digits[v]);
+    val -= v;
+    val *= radix;
+}
+void print(double val, uint64 radix, const char* digits) {
+    if(val != val) {
+        print("NaN");
+        return;
+    }
+    if(val < 0) {
+        val = -val;
+        print('-');
+    }
+    if(val > 1 && val/radix == val) {
+        print("Infinity");
+        return;
+    }
+    double v = val;
+    unsigned int dcnt = dcount(v, radix) + 1;
+    while(dcnt--) pndig(val, radix, digits);
+    if(val != 0) print('.');
+    dcnt = 16;
+    while(val != 0 && dcnt--) pndig(val, radix, digits);
 }
 
 static bool deCol(Color& c, char e) {
@@ -79,21 +108,21 @@ static void consume(const char*& format) {
 }
 
 void print_format_arg(const char*& format, int arg) {
-    print_format_arg(format, (long) arg);
+    print_format_arg(format, (int64) arg);
 }
 
 void print_format_arg(const char*& format, unsigned int arg) {
-    print_format_arg(format, (unsigned long) arg);
+    print_format_arg(format, (uint64) arg);
 }
 
-void print_format_arg(const char*& format, long arg) {
+void print_format_arg(const char*& format, int64 arg) {
     consume(format);
     if(format[0] == '%') {
         switch(format[1]) {
             case 'c': print((char) arg); break;
             case 'd': print(arg); break;
             case 'x': print("0x"); print(arg, 16); break;
-            case 'f': print((double) arg); break;
+            case 'f': print((float64) arg); break;
             case 's': print(arg); break;
             default: return;
         }
@@ -101,14 +130,14 @@ void print_format_arg(const char*& format, long arg) {
     }
 }
 
-void print_format_arg(const char*& format, unsigned long arg) {
+void print_format_arg(const char*& format, uint64 arg) {
     consume(format);
     if(format[0] == '%') {
         switch(format[1]) {
             case 'c': print((char) arg); break;
             case 'd': print(arg); break;
             case 'x': print("0x"); print(arg, 16); break;
-            case 'f': print((double) arg); break;
+            case 'f': print((float64) arg); break;
             case 's': print(arg); break;
             default: return;
         }
@@ -116,11 +145,11 @@ void print_format_arg(const char*& format, unsigned long arg) {
     }
 }
 
-void print_format_arg(const char*& format, double arg) {
+void print_format_arg(const char*& format, float64 arg) {
     consume(format);
     if(format[0] == '%') {
         switch(format[1]) {
-            case 'f': print((double) arg); break;
+            case 'f': print(arg); break;
             case 's': print(arg); break;
             default: return;
         }

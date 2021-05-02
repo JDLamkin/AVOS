@@ -69,7 +69,7 @@ extern _START
 
 start_64:
     call _START
-    jmp $
+    hlt
 
 section .data
 

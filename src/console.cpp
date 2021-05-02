@@ -3,23 +3,23 @@
 
 namespace BootConsole {
 
-static unsigned short* const console_buffer = (unsigned short*)0xB8000;
+static uint16* const console_buffer = (uint16*)0xB8000;
 
-static const unsigned short CGA_idx = 0x3D4;
-static const unsigned short CGA_dat = 0x3D5;
+static const uint16 CGA_idx = 0x3D4;
+static const uint16 CGA_dat = 0x3D5;
 
-static const unsigned char NROWS = 25;
-static const unsigned char NCOLS = 80;
-static const unsigned short CSIZE = NROWS*NCOLS;
+static const uint8 NROWS = 25;
+static const uint8 NCOLS = 80;
+static const uint16 CSIZE = NROWS*NCOLS;
 
-static unsigned short cursor;
-static unsigned char color;
-static unsigned char base_col;
+static uint16 cursor;
+static uint8 color;
+static uint8 base_col;
 
 static void update_cursor() {
-    unsigned char clow, chi;
-    clow = (unsigned char)(cursor & 0xFF);
-    chi  = (unsigned char)(cursor >> 8);
+    uint8 clow, chi;
+    clow = (uint8)(cursor & 0xFF);
+    chi  = (uint8)(cursor >> 8);
     outport8(CGA_idx, 0x0F);
     outport8(CGA_dat, clow);
     outport8(CGA_idx, 0x0E);
@@ -32,17 +32,17 @@ static void set_char(char c) {
 
 static void clear() {
     clear_color();
-    unsigned short data = color << 8 | ' ';
+    uint16 data = color << 8 | ' ';
     memset16(console_buffer, data, CSIZE);
 }
 
-static void do_scroll(signed char rows) {
-    unsigned char nclr = rows < 0 ? -rows : rows;
-    unsigned char ncpy = NROWS - nclr;
-    unsigned long cpy_length = ncpy * NCOLS * 2;
-    unsigned long clr_length = nclr * NCOLS;
-    unsigned short* offset_region = console_buffer + clr_length;
-    unsigned short data = color << 8 | ' ';
+static void do_scroll(int8 rows) {
+    uint8 nclr = rows < 0 ? -rows : rows;
+    uint8 ncpy = NROWS - nclr;
+    uint64 cpy_length = ncpy * NCOLS * 2;
+    uint64 clr_length = nclr * NCOLS;
+    uint16* offset_region = console_buffer + clr_length;
+    uint16 data = color << 8 | ' ';
     if(rows > 0) {
         memcpy(console_buffer, offset_region, cpy_length);
         memset16(console_buffer + ncpy * NCOLS, data, clr_length);
@@ -53,9 +53,9 @@ static void do_scroll(signed char rows) {
 }
 
 void set_pos(int x, int y) {
-    int pos = x + y*NCOLS;
+    int16 pos = x + y*NCOLS;
     cursor = x + y*NCOLS;
-    signed char scroll = 0;
+    int8 scroll = 0;
     while(pos < 0) {
         --scroll;
         pos += NCOLS;
@@ -97,7 +97,7 @@ void print(char c) {
 }
 
 void init() {
-    unsigned char clow, chi;
+    uint8 clow, chi;
     outport8(CGA_idx, 0x0F);
     clow = inport8(CGA_dat);
     outport8(CGA_idx, 0x0E);
