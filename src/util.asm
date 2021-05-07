@@ -41,13 +41,6 @@ _outport32:
     out dx, eax
     ret
 
-%macro MEMCPY_START 0
-    mov rcx, rdx
-%endmacro
-%macro MEMCPY_END 0
-    ret
-%endmacro
-
 ; __stdcall void _memset_raw  (void* dst, unsigned long v, unsigned long length);
 global _memset_raw
 _memset_raw:
@@ -59,56 +52,56 @@ _memset_raw:
 ; __stdcall void _memcpy_inc8 (void* dst, const void* src, unsigned long length);
 global _memcpy_inc8
 _memcpy_inc8:
-    MEMCPY_START
+    mov rcx, rdx
     cld
     rep movsb
-    MEMCPY_END
+    ret
 ; __stdcall void _memcpy_inc16(void* dst, const void* src, unsigned long length);
 global _memcpy_inc16
 _memcpy_inc16:
-    MEMCPY_START
+    mov rcx, rdx
     cld
     rep movsw
-    MEMCPY_END
+    ret
 ; __stdcall void _memcpy_inc32(void* dst, const void* src, unsigned long length);
 global _memcpy_inc32
 _memcpy_inc32:
-    MEMCPY_START
+    mov rcx, rdx
     cld
     rep movsd
-    MEMCPY_END
+    ret
 ; __stdcall void _memcpy_inc64(void* dst, const void* src, unsigned long length);
 global _memcpy_inc64
 _memcpy_inc64:
-    MEMCPY_START
+    mov rcx, rdx
     cld
     rep movsq
-    MEMCPY_END
+    ret
 ; __stdcall void _memcpy_dec8 (void* dst, const void* src, unsigned long length);
 global _memcpy_dec8
 _memcpy_dec8:
-    MEMCPY_START
+    mov rcx, rdx
     std
     rep movsb
-    MEMCPY_END
+    ret
 ; __stdcall void _memcpy_dec16(void* dst, const void* src, unsigned long length);
 global _memcpy_dec16
 _memcpy_dec16:
-    MEMCPY_START
+    mov rcx, rdx
     std
     rep movsw
-    MEMCPY_END
+    ret
 ; __stdcall void _memcpy_dec32(void* dst, const void* src, unsigned long length);
 global _memcpy_dec32
 _memcpy_dec32:
-    MEMCPY_START
+    mov rcx, rdx
     std
     rep movsd
-    MEMCPY_END
+    ret
 ; __stdcall void _memcpy_dec64(void* dst, const void* src, unsigned long length);
 global _memcpy_dec64
 _memcpy_dec64:
-    MEMCPY_START
+    mov rcx, rdx
     std
     rep movsq
-    MEMCPY_END
+    ret

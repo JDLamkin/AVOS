@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 SOURCE_FILES=$(wildcard src/*)
 
 SIZE=1440k
@@ -27,8 +28,8 @@ ASM_DEBUG_FLAGS=-S -masm=intel
 ELF_DEBUG_FLAGS=--oformat=elf64-x86-64
 
 COMPILE_ASM=nasm -f elf64
-COMPILE_C=  gcc -c $(GCC_CORE_FLAGS)
-COMPILE_CPP=g++ -c $(GCC_CORE_FLAGS)
+COMPILE_C=  gcc -std=c99   -c $(GCC_CORE_FLAGS)
+COMPILE_CPP=g++ -std=c++11 -c $(GCC_CORE_FLAGS)
 
 ECHO_TAG=\033[$(1);1m[MAKE]\033[m
 
